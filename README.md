@@ -1,4 +1,4 @@
-# 🔋 Battery Cell MES — 배터리 셀 제조 미니 MES
+## 🔋 Battery Cell MES — 배터리 셀 제조 미니 MES
 
 파우치형 리튬이온 배터리 셀(EV용) 제조 공정을 대상으로 만든 미니 MES(Manufacturing
 Execution System)이다. 원자재 입고부터 극판·조립·화성 3개 공정군(총 12단계)을 거쳐
