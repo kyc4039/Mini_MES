@@ -1,0 +1,25 @@
+# 데이터베이스 파일 — 스키마(schema.sql)와 샘플데이터(sample_data.sql)만 올리고,
+# 실제 DB 파일 자체는 안 올림 (누구든 스크립트로 재생성 가능하게)
+*.db
+*.sqlite
+*.sqlite3
+
+# Python 캐시
+__pycache__/
+*.pyc
+
+# 가상환경
+venv/
+.venv/
+env/
+
+# Streamlit 로컬 설정(비밀값 있을 수 있음)
+.streamlit/secrets.toml
+
+# OS 관련
+.DS_Store
+Thumbs.db
+
+# 에디터 설정
+.vscode/
+.idea/

@@ -1,0 +1,252 @@
+equipment          item               process            worker           
+inspection_result  lot                production_result
+inspection_spec    lot_genealogy      work_order       
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+CREATE TABLE item (
+    item_id INTEGER PRIMARY KEY,
+    item_code TEXT NOT NULL UNIQUE,
+    item_name TEXT NOT NULL,
+    item_type TEXT NOT NULL CHECK (item_type IN ('RAW', 'WIP', 'CELL')),
+    unit TEXT
+);
+INSERT INTO item VALUES(1,'RAW-CATH-001','양극활물질(NCM)','RAW','kg');
+INSERT INTO item VALUES(2,'RAW-BINDER-001','바인더','RAW','kg');
+INSERT INTO item VALUES(3,'RAW-ALFOIL-001','알루미늄박(집전체)','RAW','roll');
+INSERT INTO item VALUES(4,'RAW-SEPARATOR-001','분리막','RAW','roll');
+INSERT INTO item VALUES(5,'WIP-CATHSLURRY-001','양극 슬러리','WIP','kg');
+INSERT INTO item VALUES(6,'WIP-CATHCOATED-001','양극 코팅롤','WIP','roll');
+INSERT INTO item VALUES(7,'WIP-CATHPRESSED-001','양극 압연롤','WIP','roll');
+INSERT INTO item VALUES(8,'WIP-CATHSHEET-001','양극 시트','WIP','ea');
+INSERT INTO item VALUES(9,'WIP-CATHUNIT-001','양극판(노칭완료)','WIP','ea');
+INSERT INTO item VALUES(10,'CELL-EV-001','EV용 파우치 셀','CELL','ea');
+CREATE TABLE process (
+    process_id INTEGER PRIMARY KEY,
+    process_code TEXT NOT NULL UNIQUE,
+    process_name TEXT NOT NULL,
+    process_group TEXT NOT NULL CHECK (process_group IN ('전극', '조립', '화성')),
+    seq_no INTEGER
+);
+INSERT INTO process VALUES(1,'MIX-01','믹싱','전극',1);
+INSERT INTO process VALUES(2,'COAT-01','코팅','전극',2);
+INSERT INTO process VALUES(3,'PRESS-01','프레스','전극',3);
+INSERT INTO process VALUES(4,'SLIT-01','슬리팅','전극',4);
+INSERT INTO process VALUES(5,'NOTCH-01','노칭','조립',5);
+INSERT INTO process VALUES(6,'STACK-01','스태킹','조립',6);
+INSERT INTO process VALUES(7,'SEAL-01','파우치 실링','조립',7);
+INSERT INTO process VALUES(8,'INJECT-01','전해액 주입','조립',8);
+INSERT INTO process VALUES(9,'AGE-01','에이징','화성',9);
+INSERT INTO process VALUES(10,'FORM-01','화성 충방전','화성',10);
+INSERT INTO process VALUES(11,'DEGAS-01','디개싱','화성',11);
+INSERT INTO process VALUES(12,'FINAL-01','최종검사','화성',12);
+CREATE TABLE equipment (
+    equipment_id INTEGER PRIMARY KEY,
+    equipment_code TEXT NOT NULL UNIQUE,
+    equipment_name TEXT NOT NULL,
+    process_id INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'RUN' CHECK (status IN ('RUN', 'STOP', 'MAINT')),
+    FOREIGN KEY (process_id) REFERENCES process (process_id)
+);
+INSERT INTO equipment VALUES(1,'EQ-MIX-01','믹서 1호',1,'RUN');
+INSERT INTO equipment VALUES(2,'EQ-COAT-01','코터 1호',2,'RUN');
+INSERT INTO equipment VALUES(3,'EQ-PRESS-01','롤프레스 1호',3,'RUN');
+INSERT INTO equipment VALUES(4,'EQ-SLIT-01','슬리터 1호',4,'RUN');
+INSERT INTO equipment VALUES(5,'EQ-NOTCH-01','노칭기 1호',5,'RUN');
+INSERT INTO equipment VALUES(6,'EQ-STACK-01','스태킹기 1호',6,'RUN');
+INSERT INTO equipment VALUES(7,'EQ-SEAL-01','파우치실링기 1호',7,'RUN');
+INSERT INTO equipment VALUES(8,'EQ-INJECT-01','전해액주입기 1호',8,'RUN');
+INSERT INTO equipment VALUES(9,'EQ-AGE-01','에이징챔버 1호',9,'RUN');
+INSERT INTO equipment VALUES(10,'EQ-FORM-01','화성기 1호',10,'RUN');
+INSERT INTO equipment VALUES(11,'EQ-DEGAS-01','디개싱기 1호',11,'RUN');
+INSERT INTO equipment VALUES(12,'EQ-FINAL-01','최종검사기 1호',12,'RUN');
+INSERT INTO equipment VALUES(13,'EQ-MIX-02','믹서 2호',1,'RUN');
+INSERT INTO equipment VALUES(14,'EQ-COAT-02','코터 2호',2,'RUN');
+INSERT INTO equipment VALUES(15,'EQ-PRESS-02','롤프레스 2호',3,'MAINT');
+INSERT INTO equipment VALUES(16,'EQ-SLIT-02','슬리터 2호',4,'RUN');
+INSERT INTO equipment VALUES(17,'EQ-NOTCH-02','노칭기 2호',5,'RUN');
+INSERT INTO equipment VALUES(18,'EQ-STACK-02','스태킹기 2호',6,'RUN');
+INSERT INTO equipment VALUES(19,'EQ-SEAL-02','파우치실링기 2호',7,'MAINT');
+INSERT INTO equipment VALUES(20,'EQ-INJECT-02','전해액주입기 2호',8,'RUN');
+INSERT INTO equipment VALUES(21,'EQ-AGE-02','에이징챔버 2호',9,'RUN');
+INSERT INTO equipment VALUES(22,'EQ-FORM-02','화성기 2호',10,'RUN');
+INSERT INTO equipment VALUES(23,'EQ-DEGAS-02','디개싱기 2호',11,'STOP');
+INSERT INTO equipment VALUES(24,'EQ-FINAL-02','최종검사기 2호',12,'RUN');
+CREATE TABLE worker (
+    worker_id INTEGER PRIMARY KEY,
+    worker_code TEXT NOT NULL UNIQUE,
+    worker_name TEXT NOT NULL,
+    shift TEXT CHECK (shift IN ('주간', '야간'))
+);
+INSERT INTO worker VALUES(1,'W-001','김민준','주간');
+INSERT INTO worker VALUES(2,'W-002','이서연','주간');
+INSERT INTO worker VALUES(3,'W-003','박도윤','야간');
+CREATE TABLE inspection_spec (
+    spec_id INTEGER PRIMARY KEY,
+    process_id INTEGER NOT NULL,
+    spec_name TEXT NOT NULL,
+    lower_limit REAL,
+    upper_limit REAL,
+    unit TEXT,
+    FOREIGN KEY (process_id) REFERENCES process (process_id)
+);
+INSERT INTO inspection_spec VALUES(1,1,'점도',3000.0,5000.0,'cP');
+INSERT INTO inspection_spec VALUES(2,2,'도포량',18.0,22.0,'mg/cm2');
+INSERT INTO inspection_spec VALUES(3,3,'압연두께',0.140000000000000013,0.160000000000000003,'mm');
+INSERT INTO inspection_spec VALUES(4,4,'슬리팅폭',149.5,150.5,'mm');
+INSERT INTO inspection_spec VALUES(5,5,'노칭치수',79.5,80.5,'mm');
+INSERT INTO inspection_spec VALUES(6,6,'정렬오차',0.0,0.299999999999999988,'mm');
+INSERT INTO inspection_spec VALUES(7,7,'실링강도',15.0,25.0,'N/15mm');
+INSERT INTO inspection_spec VALUES(8,8,'전해액주입량',4.79999999999999982,5.20000000000000017,'g');
+INSERT INTO inspection_spec VALUES(9,9,'OCV',3.20000000000000017,3.39999999999999991,'V');
+INSERT INTO inspection_spec VALUES(10,10,'초기용량',4.90000000000000035,5.09999999999999964,'Ah');
+INSERT INTO inspection_spec VALUES(11,11,'디개싱후두께',6.0,6.5,'mm');
+INSERT INTO inspection_spec VALUES(12,12,'전압',3.60000000000000008,3.64999999999999991,'V');
+INSERT INTO inspection_spec VALUES(13,12,'용량',4.95000000000000017,5.04999999999999982,'Ah');
+CREATE TABLE work_order (
+    work_order_id INTEGER PRIMARY KEY,
+    work_order_no TEXT NOT NULL UNIQUE,
+    item_id INTEGER NOT NULL,
+    plan_qty REAL NOT NULL CHECK (plan_qty > 0),
+    status TEXT NOT NULL DEFAULT 'WAITING' CHECK (status IN ('WAITING', 'IN_PROGRESS', 'COMPLETED', 'CANCELED')),
+    FOREIGN KEY (item_id) REFERENCES item (item_id)
+);
+INSERT INTO work_order VALUES(1,'WO-20260722-001',10,100.0,'IN_PROGRESS');
+CREATE TABLE lot (
+    lot_id INTEGER PRIMARY KEY,
+    lot_no TEXT NOT NULL UNIQUE,
+    item_id INTEGER NOT NULL,
+    lot_type TEXT NOT NULL CHECK (lot_type IN ('RAW', 'WIP', 'CELL')),
+    qty REAL NOT NULL CHECK (qty > 0),
+    process_id INTEGER,
+    status TEXT NOT NULL DEFAULT 'IN_PROCESS' CHECK (status IN ('IN_PROCESS', 'COMPLETED', 'CONSUMED', 'HOLD')), created_at TEXT,
+    FOREIGN KEY (item_id) REFERENCES item (item_id),
+    FOREIGN KEY (process_id) REFERENCES process (process_id)
+);
+INSERT INTO lot VALUES(1,'RAW-CATH-LOT001',1,'RAW',50.0,NULL,'IN_PROCESS','2026-07-20 09:00');
+INSERT INTO lot VALUES(2,'RAW-BINDER-LOT001',2,'RAW',10.0,NULL,'IN_PROCESS','2026-07-20 09:00');
+INSERT INTO lot VALUES(3,'RAW-ALFOIL-LOT001',3,'RAW',5.0,NULL,'IN_PROCESS','2026-07-20 09:00');
+INSERT INTO lot VALUES(4,'RAW-SEPARATOR-LOT001',4,'RAW',20.0,NULL,'IN_PROCESS','2026-07-20 09:00');
+INSERT INTO lot VALUES(5,'CATHSLURRY-LOT001',5,'WIP',48.0,1,'CONSUMED','2026-07-22 08:25');
+INSERT INTO lot VALUES(6,'CATHCOATED-LOT001',6,'WIP',1.0,2,'CONSUMED','2026-07-22 09:10');
+INSERT INTO lot VALUES(7,'CATHPRESSED-LOT001',7,'WIP',1.0,3,'CONSUMED','2026-07-22 09:40');
+INSERT INTO lot VALUES(8,'CATHSHEET-LOT001',8,'WIP',1.0,4,'CONSUMED','2026-07-22 10:00');
+INSERT INTO lot VALUES(9,'CATHUNIT-LOT001',9,'WIP',1.0,5,'CONSUMED','2026-07-22 10:20');
+INSERT INTO lot VALUES(10,'CELL-SN-2026072201',10,'CELL',1.0,12,'COMPLETED','2026-07-22 11:00');
+INSERT INTO lot VALUES(11,'RAW-CATH-LOT002',1,'RAW',45.0,NULL,'IN_PROCESS','2026-08-04 09:00');
+INSERT INTO lot VALUES(12,'RAW-BINDER-LOT002',2,'RAW',3.0,NULL,'IN_PROCESS','2026-08-04 09:00');
+INSERT INTO lot VALUES(13,'RAW-ALFOIL-LOT002',3,'RAW',3.0,NULL,'IN_PROCESS','2026-08-04 09:00');
+INSERT INTO lot VALUES(14,'RAW-SEPARATOR-LOT002',4,'RAW',10.0,NULL,'IN_PROCESS','2026-08-04 09:00');
+INSERT INTO lot VALUES(15,'CATHSLURRY-LOT002',5,'WIP',16.0,1,'COMPLETED','2026-08-04 09:15');
+INSERT INTO lot VALUES(16,'CATHCOATED-LOT002',6,'WIP',1.0,2,'CONSUMED','2026-08-04 09:45');
+INSERT INTO lot VALUES(17,'CATHPRESSED-LOT002',7,'WIP',1.0,3,'CONSUMED','2026-08-04 10:30');
+INSERT INTO lot VALUES(18,'CATHSHEET-LOT002',8,'WIP',1.0,4,'CONSUMED','2026-08-04 11:00');
+INSERT INTO lot VALUES(19,'CATHUNIT-LOT002',9,'WIP',1.0,5,'CONSUMED','2026-08-04 11:30');
+INSERT INTO lot VALUES(20,'CELL-SN-STACK-260804-01',10,'CELL',1.0,6,'CONSUMED','2026-08-04 11:50');
+INSERT INTO lot VALUES(21,'CELL-SN-SEAL-260804-01',10,'CELL',1.0,7,'CONSUMED','2026-08-04 12:25');
+INSERT INTO lot VALUES(22,'CELL-SN-INJECT-260804-01',10,'CELL',1.0,8,'CONSUMED','2026-08-04 12:50');
+INSERT INTO lot VALUES(23,'CELL-SN-AGE-260804-01',10,'CELL',1.0,9,'CONSUMED','2026-08-04 13:15');
+INSERT INTO lot VALUES(24,'CELL-SN-FORM-260804-01',10,'CELL',1.0,10,'CONSUMED','2026-08-04 17:20');
+INSERT INTO lot VALUES(25,'CELL-SN-DEGAS-260804-01',10,'CELL',1.0,11,'CONSUMED','2026-08-04 18:30');
+INSERT INTO lot VALUES(26,'CELL-SN-FINAL-260804-01',10,'CELL',1.0,12,'COMPLETED','2026-08-04 19:00');
+INSERT INTO lot VALUES(27,'CATHSLURRY-LOT003',5,'WIP',16.0,1,'COMPLETED','2026-08-05 10:00');
+CREATE TABLE lot_genealogy (
+    genealogy_id INTEGER PRIMARY KEY,
+    parent_lot_id INTEGER NOT NULL,
+    child_lot_id INTEGER NOT NULL,
+    qty_used REAL NOT NULL CHECK (qty_used > 0),
+    FOREIGN KEY (parent_lot_id) REFERENCES lot (lot_id),
+    FOREIGN KEY (child_lot_id) REFERENCES lot (lot_id)
+);
+INSERT INTO lot_genealogy VALUES(1,1,5,45.0);
+INSERT INTO lot_genealogy VALUES(2,2,5,3.0);
+INSERT INTO lot_genealogy VALUES(3,5,6,48.0);
+INSERT INTO lot_genealogy VALUES(4,3,6,1.0);
+INSERT INTO lot_genealogy VALUES(5,6,7,1.0);
+INSERT INTO lot_genealogy VALUES(6,7,8,1.0);
+INSERT INTO lot_genealogy VALUES(7,8,9,1.0);
+INSERT INTO lot_genealogy VALUES(8,9,10,1.0);
+INSERT INTO lot_genealogy VALUES(9,4,10,2.0);
+INSERT INTO lot_genealogy VALUES(10,11,15,15.0);
+INSERT INTO lot_genealogy VALUES(11,12,15,1.0);
+INSERT INTO lot_genealogy VALUES(12,15,16,1.0);
+INSERT INTO lot_genealogy VALUES(13,16,17,1.0);
+INSERT INTO lot_genealogy VALUES(14,17,18,1.0);
+INSERT INTO lot_genealogy VALUES(15,18,19,1.0);
+INSERT INTO lot_genealogy VALUES(16,19,20,1.0);
+INSERT INTO lot_genealogy VALUES(17,4,20,2.0);
+INSERT INTO lot_genealogy VALUES(18,20,21,1.0);
+INSERT INTO lot_genealogy VALUES(19,21,22,1.0);
+INSERT INTO lot_genealogy VALUES(20,22,23,1.0);
+INSERT INTO lot_genealogy VALUES(21,23,24,1.0);
+INSERT INTO lot_genealogy VALUES(22,24,25,1.0);
+INSERT INTO lot_genealogy VALUES(23,25,26,1.0);
+INSERT INTO lot_genealogy VALUES(24,11,27,15.0);
+INSERT INTO lot_genealogy VALUES(25,12,27,1.0);
+CREATE TABLE production_result (
+    production_result_id INTEGER PRIMARY KEY,
+    work_order_id INTEGER NOT NULL,
+    process_id INTEGER NOT NULL,
+    equipment_id INTEGER NOT NULL,
+    worker_id INTEGER NOT NULL,
+    output_lot_id INTEGER NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT,
+    qty REAL NOT NULL CHECK (qty > 0),
+    FOREIGN KEY (work_order_id) REFERENCES work_order (work_order_id),
+    FOREIGN KEY (process_id) REFERENCES process (process_id),
+    FOREIGN KEY (equipment_id) REFERENCES equipment (equipment_id),
+    FOREIGN KEY (worker_id) REFERENCES worker (worker_id),
+    FOREIGN KEY (output_lot_id) REFERENCES lot (lot_id)
+);
+INSERT INTO production_result VALUES(1,1,1,1,1,5,'2026-07-22 08:00','2026-07-22 08:25',48.0);
+INSERT INTO production_result VALUES(2,1,2,2,1,6,'2026-07-22 08:35','2026-07-22 09:10',1.0);
+INSERT INTO production_result VALUES(3,1,3,3,1,7,'2026-07-22 09:15','2026-07-22 09:40',1.0);
+INSERT INTO production_result VALUES(4,1,4,4,2,8,'2026-07-22 09:45','2026-07-22 10:00',1.0);
+INSERT INTO production_result VALUES(5,1,5,5,2,9,'2026-07-22 10:05','2026-07-22 10:20',1.0);
+INSERT INTO production_result VALUES(6,1,6,6,2,10,'2026-07-22 10:30','2026-07-22 11:00',1.0);
+INSERT INTO production_result VALUES(7,1,7,7,2,10,'2026-07-22 11:10','2026-07-22 11:30',1.0);
+INSERT INTO production_result VALUES(8,1,8,8,3,10,'2026-07-22 11:40','2026-07-22 12:00',1.0);
+INSERT INTO production_result VALUES(9,1,9,9,3,10,'2026-07-22 13:00','2026-07-22 17:00',1.0);
+INSERT INTO production_result VALUES(10,1,10,10,3,10,'2026-07-22 17:10','2026-07-22 18:00',1.0);
+INSERT INTO production_result VALUES(11,1,11,11,1,10,'2026-07-22 18:10','2026-07-22 18:30',1.0);
+INSERT INTO production_result VALUES(12,1,12,12,1,10,'2026-07-22 18:35','2026-07-22 18:50',1.0);
+INSERT INTO production_result VALUES(13,1,1,1,1,15,'2026-08-04 09:15','2026-08-04 09:40',16.0);
+INSERT INTO production_result VALUES(14,1,2,2,1,16,'2026-08-04 09:45','2026-08-04 10:20',1.0);
+INSERT INTO production_result VALUES(15,1,3,3,1,17,'2026-08-04 10:30','2026-08-04 10:55',1.0);
+INSERT INTO production_result VALUES(16,1,4,4,1,18,'2026-08-04 11:00','2026-08-04 11:15',1.0);
+INSERT INTO production_result VALUES(17,1,5,5,1,19,'2026-08-04 11:30','2026-08-04 11:45',1.0);
+INSERT INTO production_result VALUES(18,1,6,6,1,20,'2026-08-04 11:50','2026-08-04 12:20',1.0);
+INSERT INTO production_result VALUES(19,1,7,7,1,21,'2026-08-04 12:25','2026-08-04 12:45',1.0);
+INSERT INTO production_result VALUES(20,1,8,8,1,22,'2026-08-04 12:50','2026-08-04 13:10',1.0);
+INSERT INTO production_result VALUES(21,1,9,9,1,23,'2026-08-04 13:15','2026-08-04 17:15',1.0);
+INSERT INTO production_result VALUES(22,1,10,10,1,24,'2026-08-04 17:20','2026-08-04 18:10',1.0);
+INSERT INTO production_result VALUES(23,1,11,11,1,25,'2026-08-04 18:30','2026-08-04 18:50',1.0);
+INSERT INTO production_result VALUES(24,1,12,12,1,26,'2026-08-04 19:00','2026-08-04 19:15',1.0);
+INSERT INTO production_result VALUES(25,1,1,1,1,27,'2026-08-05 10:00','2026-08-05 10:25',16.0);
+CREATE TABLE inspection_result (
+    inspection_result_id INTEGER PRIMARY KEY,
+    lot_id INTEGER NOT NULL,
+    spec_id INTEGER NOT NULL,
+    measured_value REAL NOT NULL,
+    judge TEXT NOT NULL CHECK (judge IN ('PASS', 'FAIL')),
+    inspected_at TEXT NOT NULL,
+    FOREIGN KEY (lot_id) REFERENCES lot (lot_id),
+    FOREIGN KEY (spec_id) REFERENCES inspection_spec (spec_id)
+);
+INSERT INTO inspection_result VALUES(1,5,1,4200.0,'PASS','2026-07-22 08:26');
+INSERT INTO inspection_result VALUES(2,6,2,20.1000000000000014,'PASS','2026-07-22 09:11');
+INSERT INTO inspection_result VALUES(4,8,4,150.099999999999994,'PASS','2026-07-22 10:01');
+INSERT INTO inspection_result VALUES(6,10,6,0.200000000000000011,'PASS','2026-07-22 11:01');
+INSERT INTO inspection_result VALUES(7,10,7,20.0,'PASS','2026-07-22 11:31');
+INSERT INTO inspection_result VALUES(8,10,8,5.0,'PASS','2026-07-22 12:01');
+INSERT INTO inspection_result VALUES(9,10,9,3.29999999999999982,'PASS','2026-07-22 17:05');
+INSERT INTO inspection_result VALUES(10,10,10,5.00999999999999978,'PASS','2026-07-22 18:05');
+INSERT INTO inspection_result VALUES(11,10,11,6.79999999999999982,'FAIL','2026-07-22 18:32');
+INSERT INTO inspection_result VALUES(12,10,12,3.6200000000000001,'PASS','2026-07-22 18:51');
+INSERT INTO inspection_result VALUES(13,10,13,5.01999999999999957,'PASS','2026-07-22 18:52');
+INSERT INTO inspection_result VALUES(14,23,9,3.29999999999999982,'PASS','2026-08-04 17:20');
+INSERT INTO inspection_result VALUES(15,24,10,5.00999999999999978,'PASS','2026-08-04 18:25');
+INSERT INTO inspection_result VALUES(16,25,11,6.20000000000000017,'PASS','2026-08-04 18:55');
+INSERT INTO inspection_result VALUES(17,26,12,3.6200000000000001,'PASS','2026-08-04 19:20');
+INSERT INTO inspection_result VALUES(18,26,13,5.01999999999999957,'PASS','2026-08-04 19:20');
+COMMIT;
