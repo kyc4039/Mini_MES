@@ -1,6 +1,3 @@
-equipment          item               process            worker           
-inspection_result  lot                production_result
-inspection_spec    lot_genealogy      work_order       
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE item (
